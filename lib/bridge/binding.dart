@@ -81,15 +81,30 @@ class Binding {
     return output;
   }
  
-  void subscribe(String name) async {
-    await callAsync("subscribe", Uint8List(0));
+  Future<String> subscribe(String lookup) async {
+    Uint8List r = await callAsync("subscribe", Uint8List.fromList(lookup.codeUnits));
+    return String.fromCharCodes(r);
   }
 
-  Stream<String> pop(String name) async* {
+  Stream<String> pop(String key) async* {
     while (true) {
-      Uint8List r = await callAsync("pop", Uint8List(0));
+      Uint8List r = await callAsync("pop", Uint8List.fromList(key.codeUnits));
       yield String.fromCharCodes(r);
     }
+  }
+ 
+  Future<void> requestStream(String rootHash) async {
+    await callAsync("requestStream", Uint8List.fromList(rootHash.codeUnits));
+  }
+ 
+  Future<String> put(String objectJSON) async {
+    Uint8List r = await callAsync("put", Uint8List.fromList(objectJSON.codeUnits));
+    return String.fromCharCodes(r);
+  }
+ 
+  Future<String> getFeedRootHash(String feedRoothash) async {
+    Uint8List r = await callAsync("getFeedRootHash", Uint8List.fromList(feedRoothash.codeUnits));
+    return String.fromCharCodes(r);
   }
 
   void handleError(ffi.Pointer<Utf8> error, ffi.Pointer pointer) {

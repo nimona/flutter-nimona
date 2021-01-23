@@ -1,3 +1,8 @@
-module nimona.io/plugins/flutter
+module flutter.nimona.io
 
 go 1.15
+
+require (
+	github.com/rs/xid v1.2.1
+	nimona.io v0.15.5
+)
