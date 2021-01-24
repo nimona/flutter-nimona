@@ -2,6 +2,8 @@ package provider
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -171,40 +173,52 @@ func (p *Provider) GetConnectionInfo() *peer.ConnectionInfo {
 // - owner:<publicKey>
 func (p *Provider) Subscribe(
 	ctx context.Context,
-	lookups ...string,
+	lookup string,
 ) (object.ReadCloser, error) {
-	opts := []objectmanager.LookupOption{}
-	for _, l := range lookups {
-		parts := strings.Split(l, ":")
-		if len(parts) < 2 {
-			continue
+	sOpts := []objectmanager.LookupOption{}
+	readers := []object.ReadCloser{}
+	parts := strings.Split(lookup, ":")
+	if len(parts) < 2 {
+		return nil, errors.New("invalid lookup query")
+	}
+	prefix := parts[0]
+	value := strings.Join(parts[1:], ":")
+	fmt.Println(">>> sub", prefix, value)
+	switch prefix {
+	case "type":
+		sOpts = append(
+			sOpts,
+			objectmanager.FilterByObjectType(value),
+		)
+		reader, err := p.objectstore.GetByType(value)
+		if err == nil {
+			readers = append(readers, reader)
 		}
-		prefix := parts[0]
-		value := strings.Join(parts[1:], ":")
-		switch prefix {
-		case "type":
-			opts = append(
-				opts,
-				objectmanager.FilterByObjectType(value),
-			)
-		case "hash":
-			opts = append(
-				opts,
-				objectmanager.FilterByHash(object.Hash(value)),
-			)
-		case "owner":
-			opts = append(
-				opts,
-				objectmanager.FilterByOwner(crypto.PublicKey(value)),
-			)
-		case "stream":
-			opts = append(
-				opts,
-				objectmanager.FilterByStreamHash(object.Hash(value)),
-			)
+	case "hash":
+		sOpts = append(
+			sOpts,
+			objectmanager.FilterByHash(object.Hash(value)),
+		)
+	case "owner":
+		sOpts = append(
+			sOpts,
+			objectmanager.FilterByOwner(crypto.PublicKey(value)),
+		)
+	case "stream":
+		sOpts = append(
+			sOpts,
+			objectmanager.FilterByStreamHash(object.Hash(value)),
+		)
+		reader, err := p.objectstore.GetByStream(object.Hash(value))
+		if err == nil {
+			readers = append(readers, reader)
 		}
 	}
-	return p.objectmanager.Subscribe(), nil
+	reader := p.objectmanager.Subscribe()
+	if len(readers) == 0 {
+		return reader, nil
+	}
+	return NewSequentialReader(append(readers, reader)...), nil
 }
 
 func (p *Provider) RequestStream(
@@ -225,6 +239,12 @@ func (p *Provider) Put(
 	ctx context.Context,
 	obj *object.Object,
 ) (*object.Object, error) {
+	switch obj.Metadata.Owner {
+	case "@peer":
+		obj.Metadata.Owner = p.local.GetPrimaryPeerKey().PublicKey()
+	case "@identity":
+		obj.Metadata.Owner = p.local.GetPrimaryIdentityKey().PublicKey()
+	}
 	return p.objectmanager.Put(ctx, obj)
 }
 
