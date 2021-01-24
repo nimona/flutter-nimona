@@ -41,7 +41,7 @@ func renderBytes(b []byte, err error) *C.BytesReturn {
 
 func renderObject(o *object.Object) *C.BytesReturn {
 	m := o.ToMap()
-	m["_hash"] = o.Hash().String()
+	m["_hash:s"] = o.Hash().String()
 	b, err := json.Marshal(m)
 	return renderBytes(b, err)
 }
