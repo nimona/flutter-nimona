@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+
 class GetRequest {
   String lookup;
   String orderBy;
@@ -83,4 +85,52 @@ class GetRequest {
         limit.hashCode ^
         offset.hashCode;
   }
+}
+
+class GetResponse {
+  List<String> objectBodies;
+
+  GetResponse({
+    this.objectBodies,
+  });
+
+  GetResponse copyWith({
+    List<String> objectBodies,
+  }) {
+    return GetResponse(
+      objectBodies: objectBodies ?? this.objectBodies,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'objectBodies': objectBodies,
+    };
+  }
+
+  factory GetResponse.fromMap(Map<String, dynamic> map) {
+    if (map == null) return null;
+  
+    return GetResponse(
+      objectBodies: List<String>.from(map['objectBodies']),
+    );
+  }
+
+  String toJson() => json.encode(toMap());
+
+  factory GetResponse.fromJson(String source) => GetResponse.fromMap(json.decode(source));
+
+  @override
+  String toString() => 'GetResponse(objectBodies: $objectBodies)';
+
+  @override
+  bool operator ==(Object o) {
+    if (identical(this, o)) return true;
+  
+    return o is GetResponse &&
+      listEquals(o.objectBodies, objectBodies);
+  }
+
+  @override
+  int get hashCode => objectBodies.hashCode;
 }

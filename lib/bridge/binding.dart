@@ -82,10 +82,11 @@ class Binding {
     return output;
   }
  
-  Future<String> get(GetRequest req) async {
+  Future<List<String>> get(GetRequest req) async {
     String reqJSON = req.toJson();
-    Uint8List r = await callAsync("get", Uint8List.fromList(reqJSON.codeUnits));
-    return String.fromCharCodes(r);
+    Uint8List body = await callAsync("get", Uint8List.fromList(reqJSON.codeUnits));
+    GetResponse resp = GetResponse.fromJson(String.fromCharCodes(body));
+    return resp.objectBodies;
   }
  
   Future<String> subscribe(String lookup) async {

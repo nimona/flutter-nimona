@@ -174,6 +174,10 @@ type GetRequest struct {
 	Offset   int    `json:"offset"`
 }
 
+type GetResponse struct {
+	ObjectBodies []string `json:"objectBodies"`
+}
+
 func (p *Provider) Get(
 	ctx context.Context,
 	req GetRequest,

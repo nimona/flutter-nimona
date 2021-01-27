@@ -48,10 +48,14 @@ func renderBytes(b []byte, err error) *C.BytesReturn {
 	return r
 }
 
-func renderObject(o *object.Object) *C.BytesReturn {
+func marshalObject(o *object.Object) ([]byte, error) {
 	m := o.ToMap()
 	m["_hash:s"] = o.Hash().String()
-	b, err := json.Marshal(m)
+	return json.Marshal(m)
+}
+
+func renderObject(o *object.Object) *C.BytesReturn {
+	b, err := marshalObject(o)
 	return renderBytes(b, err)
 }
 
@@ -79,11 +83,23 @@ func NimonaBridgeCall(
 		if err != nil {
 			return renderBytes(nil, err)
 		}
-		key := xid.New().String()
-		subscriptionsMutex.Lock()
-		subscriptions[key] = r
-		subscriptionsMutex.Unlock()
-		return renderBytes([]byte(key), nil)
+		os := []string{}
+		for {
+			o, err := r.Read()
+			if err != nil || o == nil {
+				break
+			}
+			b, err := marshalObject(o)
+			if err != nil {
+				return renderBytes(nil, err)
+			}
+			os = append(os, string(b))
+		}
+		res := &provider.GetResponse{
+			ObjectBodies: os,
+		}
+		b, err := json.Marshal(res)
+		return renderBytes(b, err)
 	case "subscribe":
 		ctx := context.New(
 			context.WithTimeout(3 * time.Second),
