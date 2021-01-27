@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 	"unsafe"
 
@@ -21,11 +22,19 @@ import (
 )
 
 var (
-	nimonaProvider = provider.New()
-	subscriptions  = map[string]object.ReadCloser{}
+	nimonaProvider     *provider.Provider
+	subscriptionsMutex sync.RWMutex
+	subscriptions      map[string]object.ReadCloser
 )
 
-func init() {}
+func init() {
+	if nimonaProvider != nil {
+		return
+	}
+	nimonaProvider = provider.New()
+	subscriptionsMutex = sync.RWMutex{}
+	subscriptions = map[string]object.ReadCloser{}
+}
 
 func renderBytes(b []byte, err error) *C.BytesReturn {
 	r := (*C.BytesReturn)(C.malloc(C.size_t(C.sizeof_BytesReturn)))
@@ -58,6 +67,23 @@ func NimonaBridgeCall(
 	fmt.Printf("> Called %s with %s\n", nameString, string(payloadBytes))
 
 	switch nameString {
+	case "get":
+		ctx := context.New(
+			context.WithTimeout(3 * time.Second),
+		)
+		req := provider.GetRequest{}
+		if err := json.Unmarshal(payloadBytes, &req); err != nil {
+			return renderBytes(nil, err)
+		}
+		r, err := nimonaProvider.Get(ctx, req)
+		if err != nil {
+			return renderBytes(nil, err)
+		}
+		key := xid.New().String()
+		subscriptionsMutex.Lock()
+		subscriptions[key] = r
+		subscriptionsMutex.Unlock()
+		return renderBytes([]byte(key), nil)
 	case "subscribe":
 		ctx := context.New(
 			context.WithTimeout(3 * time.Second),
@@ -67,18 +93,32 @@ func NimonaBridgeCall(
 			return renderBytes(nil, err)
 		}
 		key := xid.New().String()
+		subscriptionsMutex.Lock()
 		subscriptions[key] = r
+		subscriptionsMutex.Unlock()
 		return renderBytes([]byte(key), nil)
 	case "pop":
+		subscriptionsMutex.RLock()
 		r, ok := subscriptions[string(payloadBytes)]
 		if !ok {
 			return renderBytes(nil, errors.New("missing subscription key"))
 		}
+		subscriptionsMutex.RUnlock()
 		o, err := r.Read()
 		if err != nil {
 			return renderBytes(nil, err)
 		}
 		return renderObject(o)
+	case "cancel":
+		subscriptionsMutex.Lock()
+		r, ok := subscriptions[string(payloadBytes)]
+		if !ok {
+			return renderBytes(nil, errors.New("missing subscription key"))
+		}
+		subscriptionsMutex.Unlock()
+		r.Close()
+		delete(subscriptions, string(payloadBytes))
+		return renderBytes(nil, nil)
 	case "requestStream":
 		ctx := context.New(
 			context.WithTimeout(3 * time.Second),

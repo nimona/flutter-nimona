@@ -1,10 +1,19 @@
 import 'dart:async';
 
 import 'package:nimona/bridge/binding.dart';
+import 'package:nimona/models/get_request.dart';
 
 class Nimona {
+  static Future<String> get(GetRequest req) {
+    return Binding().get(req);
+  }
+
   static Future<String> subscribe(String lookup) {
     return Binding().subscribe(lookup);
+  }
+
+  static Future<void> cancel(String key) {
+    return Binding().cancel(key);
   }
 
   static Stream<String> pop(String key) {

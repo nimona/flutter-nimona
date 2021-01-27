@@ -8,6 +8,7 @@ import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
 import 'package:nimona/bridge/ffi.dart';
 import 'package:nimona/bridge/isolate.dart';
+import 'package:nimona/models/get_request.dart';
 
 typedef StartWorkType = ffi.Void Function(ffi.Int64 port);
 typedef StartWorkFunc = void Function(int port);
@@ -81,9 +82,19 @@ class Binding {
     return output;
   }
  
+  Future<String> get(GetRequest req) async {
+    String reqJSON = req.toJson();
+    Uint8List r = await callAsync("get", Uint8List.fromList(reqJSON.codeUnits));
+    return String.fromCharCodes(r);
+  }
+ 
   Future<String> subscribe(String lookup) async {
     Uint8List r = await callAsync("subscribe", Uint8List.fromList(lookup.codeUnits));
     return String.fromCharCodes(r);
+  }
+
+  Future<void> cancel(String key) async {
+    callAsync("cancel", Uint8List.fromList(key.codeUnits));
   }
 
   Stream<String> pop(String key) async* {

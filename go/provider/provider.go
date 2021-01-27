@@ -17,7 +17,6 @@ import (
 	"nimona.io/pkg/network"
 	"nimona.io/pkg/object"
 	"nimona.io/pkg/objectmanager"
-	"nimona.io/pkg/objectstore"
 	"nimona.io/pkg/peer"
 	"nimona.io/pkg/sqlobjectstore"
 	"nimona.io/pkg/version"
@@ -33,7 +32,7 @@ type (
 		local         localpeer.LocalPeer
 		network       network.Network
 		resolver      resolver.Resolver
-		objectstore   objectstore.Store
+		objectstore   *sqlobjectstore.Store
 		objectmanager objectmanager.ObjectManager
 		logger        log.Logger
 	}
@@ -41,6 +40,7 @@ type (
 )
 
 func New() *Provider {
+	fmt.Println(">>> CREATING NEW PROVIDER")
 	ctx := context.New(
 		context.WithCorrelationID("nimona"),
 	)
@@ -114,7 +114,7 @@ func New() *Provider {
 	logger.Info("ready")
 
 	// construct object store
-	db, err := sql.Open("sqlite3", filepath.Join(nConfig.Path, "chat.db"))
+	db, err := sql.Open("sqlite3", filepath.Join(nConfig.Path, "nimona.db"))
 	if err != nil {
 		logger.Fatal("error opening sql file", log.Error(err))
 	}
@@ -166,6 +166,68 @@ func (p *Provider) GetConnectionInfo() *peer.ConnectionInfo {
 	return p.local.ConnectionInfo()
 }
 
+type GetRequest struct {
+	Lookup   string `json:"lookup"`
+	OrderBy  string `json:"orderBy"`
+	OrderDir string `json:"orderDir"`
+	Limit    int    `json:"limit"`
+	Offset   int    `json:"offset"`
+}
+
+func (p *Provider) Get(
+	ctx context.Context,
+	req GetRequest,
+) (object.ReadCloser, error) {
+	opts := []sqlobjectstore.FilterOption{}
+	parts := strings.Split(req.Lookup, ":")
+	if len(parts) < 2 {
+		return nil, errors.New("invalid lookup query")
+	}
+	prefix := parts[0]
+	value := strings.Join(parts[1:], ":")
+	switch prefix {
+	case "type":
+		opts = append(
+			opts,
+			sqlobjectstore.FilterByObjectType(value),
+		)
+	case "hash":
+		opts = append(
+			opts,
+			sqlobjectstore.FilterByHash(object.Hash(value)),
+		)
+	case "owner":
+		opts = append(
+			opts,
+			sqlobjectstore.FilterByOwner(crypto.PublicKey(value)),
+		)
+	case "stream":
+		opts = append(
+			opts,
+			sqlobjectstore.FilterByStreamHash(object.Hash(value)),
+		)
+	}
+	if req.OrderBy != "" {
+		opts = append(
+			opts,
+			sqlobjectstore.FilterOrderBy(req.OrderBy),
+		)
+	}
+	if req.OrderDir != "" {
+		opts = append(
+			opts,
+			sqlobjectstore.FilterOrderDir(req.OrderDir),
+		)
+	}
+	if req.Limit > 0 && req.Offset > 0 {
+		opts = append(
+			opts,
+			sqlobjectstore.FilterLimit(req.Limit, req.Offset),
+		)
+	}
+	return p.objectstore.Filter(opts...)
+}
+
 // payload should start with one of the following:
 // - type:<type>
 // - hash:<hash>
@@ -175,50 +237,37 @@ func (p *Provider) Subscribe(
 	ctx context.Context,
 	lookup string,
 ) (object.ReadCloser, error) {
-	sOpts := []objectmanager.LookupOption{}
-	readers := []object.ReadCloser{}
+	opts := []objectmanager.LookupOption{}
 	parts := strings.Split(lookup, ":")
 	if len(parts) < 2 {
 		return nil, errors.New("invalid lookup query")
 	}
 	prefix := parts[0]
 	value := strings.Join(parts[1:], ":")
-	fmt.Println(">>> sub", prefix, value)
 	switch prefix {
 	case "type":
-		sOpts = append(
-			sOpts,
+		opts = append(
+			opts,
 			objectmanager.FilterByObjectType(value),
 		)
-		reader, err := p.objectstore.GetByType(value)
-		if err == nil {
-			readers = append(readers, reader)
-		}
 	case "hash":
-		sOpts = append(
-			sOpts,
+		opts = append(
+			opts,
 			objectmanager.FilterByHash(object.Hash(value)),
 		)
 	case "owner":
-		sOpts = append(
-			sOpts,
+		opts = append(
+			opts,
 			objectmanager.FilterByOwner(crypto.PublicKey(value)),
 		)
 	case "stream":
-		sOpts = append(
-			sOpts,
+		opts = append(
+			opts,
 			objectmanager.FilterByStreamHash(object.Hash(value)),
 		)
-		reader, err := p.objectstore.GetByStream(object.Hash(value))
-		if err == nil {
-			readers = append(readers, reader)
-		}
 	}
-	reader := p.objectmanager.Subscribe()
-	if len(readers) == 0 {
-		return reader, nil
-	}
-	return NewSequentialReader(append(readers, reader)...), nil
+	reader := p.objectmanager.Subscribe(opts...)
+	return reader, nil
 }
 
 func (p *Provider) RequestStream(
