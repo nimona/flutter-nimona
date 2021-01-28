@@ -81,6 +81,10 @@ class Binding {
     free(result.addressOf);
     return output;
   }
+
+  void init() {
+    call("init", Uint8List(0));
+  }
  
   Future<List<String>> get(GetRequest req) async {
     String reqJSON = req.toJson();

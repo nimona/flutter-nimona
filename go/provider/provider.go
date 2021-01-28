@@ -3,7 +3,6 @@ package provider
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -23,11 +22,6 @@ import (
 )
 
 type (
-	// Provider interface {
-	// 	Subscribe(context.Context, ...string) (object.ReadCloser, error)
-	// 	Put(context.Context, *object.Object) (*object.Object, error)
-	// 	RequestStream(context.Context, object.Hash) (object.ReadCloser, error)
-	// }
 	Provider struct {
 		local         localpeer.LocalPeer
 		network       network.Network
@@ -40,7 +34,6 @@ type (
 )
 
 func New() *Provider {
-	fmt.Println(">>> CREATING NEW PROVIDER")
 	ctx := context.New(
 		context.WithCorrelationID("nimona"),
 	)
@@ -54,6 +47,9 @@ func New() *Provider {
 	cConfig := &Config{}
 	nConfig, err := config.New(
 		config.WithExtraConfig("CHAT", cConfig),
+		config.WithDefaultListenOnLocalIPs(),
+		config.WithDefaultListenOnPrivateIPs(),
+		config.WithDefaultDefaultPeerBindAddress("0.0.0.0"),
 	)
 	if err != nil {
 		logger.Fatal("error loading config", log.Error(err))
@@ -111,7 +107,10 @@ func New() *Provider {
 		log.Strings("peer.addresses", local.GetAddresses()),
 	)
 
-	logger.Info("ready")
+	logger.Error(
+		"ready",
+		log.Any("addresses", local.GetAddresses()),
+	)
 
 	// construct object store
 	db, err := sql.Open("sqlite3", filepath.Join(nConfig.Path, "nimona.db"))
@@ -151,6 +150,19 @@ func New() *Provider {
 
 	// // add conversation to the list of content we provide
 	// local.PutContentHashes(conversationRootHash)
+
+	r, err := str.Filter(
+		sqlobjectstore.FilterByObjectType("stream:poc.nimona.io/conversation"),
+	)
+	if err == nil {
+		for {
+			o, err := r.Read()
+			if err != nil || o == nil {
+				break
+			}
+			local.PutContentHashes(o.Hash())
+		}
+	}
 
 	return &Provider{
 		local:         local,

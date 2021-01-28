@@ -4,6 +4,10 @@ import 'package:nimona/bridge/binding.dart';
 import 'package:nimona/models/get_request.dart';
 
 class Nimona {
+  static void init() {
+    return Binding().init();
+  }
+
   static Future<List<String>> get(GetRequest req) {
     return Binding().get(req);
   }

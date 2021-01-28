@@ -27,15 +27,6 @@ var (
 	subscriptions      map[string]object.ReadCloser
 )
 
-func init() {
-	if nimonaProvider != nil {
-		return
-	}
-	nimonaProvider = provider.New()
-	subscriptionsMutex = sync.RWMutex{}
-	subscriptions = map[string]object.ReadCloser{}
-}
-
 func renderBytes(b []byte, err error) *C.BytesReturn {
 	r := (*C.BytesReturn)(C.malloc(C.size_t(C.sizeof_BytesReturn)))
 	if err != nil {
@@ -49,7 +40,7 @@ func renderBytes(b []byte, err error) *C.BytesReturn {
 }
 
 func marshalObject(o *object.Object) ([]byte, error) {
-	m := o.ToMap()
+	m := object.Copy(o).ToMap()
 	m["_hash:s"] = o.Hash().String()
 	return json.Marshal(m)
 }
@@ -67,10 +58,17 @@ func NimonaBridgeCall(
 ) *C.BytesReturn {
 	nameString := C.GoString(name)
 	payloadBytes := C.GoBytes(payload, payloadSize)
-
 	fmt.Printf("> Called %s with %s\n", nameString, string(payloadBytes))
 
 	switch nameString {
+	case "init":
+		if nimonaProvider != nil {
+			return renderBytes(nil, nil)
+		}
+		nimonaProvider = provider.New()
+		subscriptionsMutex = sync.RWMutex{}
+		subscriptions = map[string]object.ReadCloser{}
+		return renderBytes(nil, nil)
 	case "get":
 		ctx := context.New(
 			context.WithTimeout(3 * time.Second),
