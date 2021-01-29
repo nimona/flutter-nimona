@@ -30,6 +30,7 @@ var (
 func renderBytes(b []byte, err error) *C.BytesReturn {
 	r := (*C.BytesReturn)(C.malloc(C.size_t(C.sizeof_BytesReturn)))
 	if err != nil {
+		fmt.Println("++ ERROR", err)
 		r.error = C.CString(err.Error())
 		return r
 	}
@@ -47,6 +48,7 @@ func marshalObject(o *object.Object) ([]byte, error) {
 
 func renderObject(o *object.Object) *C.BytesReturn {
 	b, err := marshalObject(o)
+	fmt.Println("++ RESP body=", string(string(b)))
 	return renderBytes(b, err)
 }
 
@@ -79,6 +81,7 @@ func NimonaBridgeCall(
 		}
 		r, err := nimonaProvider.Get(ctx, req)
 		if err != nil {
+			fmt.Println("++ ERROR", err)
 			return renderBytes(nil, err)
 		}
 		os := []string{}
@@ -89,6 +92,7 @@ func NimonaBridgeCall(
 			}
 			b, err := marshalObject(o)
 			if err != nil {
+				fmt.Println("++ ERROR", err)
 				return renderBytes(nil, err)
 			}
 			os = append(os, string(b))
@@ -97,6 +101,7 @@ func NimonaBridgeCall(
 			ObjectBodies: os,
 		}
 		b, err := json.Marshal(res)
+		fmt.Println("++ RESP body=", string(b))
 		return renderBytes(b, err)
 	case "subscribe":
 		ctx := context.New(
@@ -104,12 +109,14 @@ func NimonaBridgeCall(
 		)
 		r, err := nimonaProvider.Subscribe(ctx, string(payloadBytes))
 		if err != nil {
+			fmt.Println("++ ERROR", err)
 			return renderBytes(nil, err)
 		}
 		key := xid.New().String()
 		subscriptionsMutex.Lock()
 		subscriptions[key] = r
 		subscriptionsMutex.Unlock()
+		fmt.Println("++ RESP key=", key)
 		return renderBytes([]byte(key), nil)
 	case "pop":
 		subscriptionsMutex.RLock()
@@ -120,6 +127,7 @@ func NimonaBridgeCall(
 		subscriptionsMutex.RUnlock()
 		o, err := r.Read()
 		if err != nil {
+			fmt.Println("++ ERROR", err)
 			return renderBytes(nil, err)
 		}
 		return renderObject(o)
@@ -135,16 +143,14 @@ func NimonaBridgeCall(
 		return renderBytes(nil, nil)
 	case "requestStream":
 		ctx := context.New(
-			context.WithTimeout(3 * time.Second),
+			context.WithTimeout(10 * time.Second),
 		)
-		r, err := nimonaProvider.RequestStream(
+		if err := nimonaProvider.RequestStream(
 			ctx,
 			object.Hash(string(payloadBytes)),
-		)
-		if err != nil {
+		); err != nil {
 			return renderBytes(nil, err)
 		}
-		go object.ReadAll(r)
 		return renderBytes(nil, nil)
 	case "put":
 		ctx := context.New(
@@ -157,6 +163,7 @@ func NimonaBridgeCall(
 		o := object.FromMap(m)
 		u, err := nimonaProvider.Put(ctx, o)
 		if err != nil {
+			fmt.Println("++ ERROR", err)
 			return renderBytes(nil, err)
 		}
 		return renderObject(u)

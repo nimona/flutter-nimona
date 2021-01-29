@@ -85,17 +85,39 @@ class Binding {
   void init() {
     call("init", Uint8List(0));
   }
- 
+
   Future<List<String>> get(GetRequest req) async {
-    String reqJSON = req.toJson();
-    Uint8List body = await callAsync("get", Uint8List.fromList(reqJSON.codeUnits));
-    GetResponse resp = GetResponse.fromJson(String.fromCharCodes(body));
-    return resp.objectBodies;
+    try {
+      String reqJSON = req.toJson();
+      Uint8List body = await callAsync(
+        'get',
+        Uint8List.fromList(reqJSON.codeUnits),
+      );
+      if (body == null || body.isEmpty) {
+        throw 'got empty response';
+      }
+      GetResponse resp = GetResponse.fromJson(
+        String.fromCharCodes(body),
+      );
+      return resp.objectBodies;
+    } on Exception catch (e) {
+      throw e;
+    }
   }
- 
+
   Future<String> subscribe(String lookup) async {
-    Uint8List r = await callAsync("subscribe", Uint8List.fromList(lookup.codeUnits));
-    return String.fromCharCodes(r);
+    try {
+      Uint8List r = await callAsync(
+        'subscribe',
+        Uint8List.fromList(lookup.codeUnits),
+      );
+      if (r == null || r.isEmpty) {
+        throw 'got empty response';
+      }
+      return String.fromCharCodes(r);
+    } on Exception catch (e) {
+      throw e;
+    }
   }
 
   Future<void> cancel(String key) async {
@@ -108,18 +130,29 @@ class Binding {
       yield String.fromCharCodes(r);
     }
   }
- 
+
   Future<void> requestStream(String rootHash) async {
     await callAsync("requestStream", Uint8List.fromList(rootHash.codeUnits));
   }
- 
+
   Future<String> put(String objectJSON) async {
-    Uint8List r = await callAsync("put", Uint8List.fromList(objectJSON.codeUnits));
-    return String.fromCharCodes(r);
+    try {
+      Uint8List r = await callAsync(
+        'put',
+        Uint8List.fromList(objectJSON.codeUnits),
+      );
+      if (r == null || r.isEmpty) {
+        throw 'got empty response';
+      }
+      return String.fromCharCodes(r);
+    } on Exception catch (e) {
+      throw e;
+    }
   }
- 
+
   Future<String> getFeedRootHash(String feedRoothash) async {
-    Uint8List r = await callAsync("getFeedRootHash", Uint8List.fromList(feedRoothash.codeUnits));
+    Uint8List r = await callAsync(
+        "getFeedRootHash", Uint8List.fromList(feedRoothash.codeUnits));
     return String.fromCharCodes(r);
   }
 
@@ -143,6 +176,6 @@ class Binding {
     if (Platform.isMacOS || Platform.isIOS) {
       return ffi.DynamicLibrary.process();
     }
-    throw("not implemented");
+    throw ("not implemented");
   }
 }

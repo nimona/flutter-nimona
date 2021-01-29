@@ -49,7 +49,7 @@ func New() *Provider {
 		config.WithExtraConfig("CHAT", cConfig),
 		config.WithDefaultListenOnLocalIPs(),
 		config.WithDefaultListenOnPrivateIPs(),
-		config.WithDefaultDefaultPeerBindAddress("0.0.0.0"),
+		config.WithDefaultListenOnExternalPort(),
 	)
 	if err != nil {
 		logger.Fatal("error loading config", log.Error(err))
@@ -289,15 +289,24 @@ func (p *Provider) Subscribe(
 func (p *Provider) RequestStream(
 	ctx context.Context,
 	rootHash object.Hash,
-) (object.ReadCloser, error) {
+) error {
 	recipients, err := p.resolver.Lookup(
 		ctx,
 		resolver.LookupByContentHash(rootHash),
 	)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return p.objectmanager.RequestStream(ctx, rootHash, recipients...)
+	for _, recipient := range recipients {
+		go func(recipient *peer.ConnectionInfo) {
+			r, err := p.objectmanager.RequestStream(ctx, rootHash, recipient)
+			if err != nil {
+				return
+			}
+			r.Close()
+		}(recipient)
+	}
+	return nil
 }
 
 func (p *Provider) Put(
