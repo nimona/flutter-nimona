@@ -19,6 +19,7 @@ import (
 
 	"nimona.io/pkg/context"
 	"nimona.io/pkg/object"
+	"nimona.io/pkg/version"
 )
 
 var (
@@ -103,6 +104,9 @@ func NimonaBridgeCall(
 		b, err := json.Marshal(res)
 		fmt.Println("++ RESP body=", string(b))
 		return renderBytes(b, err)
+	case "version":
+		fmt.Println("++ RESP version=", version.Version)
+		return renderBytes([]byte(version.Version), nil)
 	case "subscribe":
 		ctx := context.New(
 			context.WithTimeout(3 * time.Second),

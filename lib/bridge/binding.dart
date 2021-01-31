@@ -41,9 +41,15 @@ class Binding {
     Completer<Uint8List> completer = new Completer();
 
     StreamSubscription subscription;
+    // TODO 
     subscription = port.listen((message) async {
+      // TODO add try catch
       await subscription?.cancel();
-      completer.complete(message);
+      if (message == null) {
+        completer.complete();
+      } else {
+        completer.complete(message);
+      }
     });
     return completer.future;
   }
@@ -100,6 +106,21 @@ class Binding {
         String.fromCharCodes(body),
       );
       return resp.objectBodies;
+    } on Exception catch (e) {
+      throw e;
+    }
+  }
+
+  Future<String> version() async {
+    try {
+      Uint8List r = await callAsync(
+        'version',
+        Uint8List(0),
+      );
+      if (r == null || r.isEmpty) {
+        throw 'got empty response';
+      }
+      return String.fromCharCodes(r);
     } on Exception catch (e) {
       throw e;
     }

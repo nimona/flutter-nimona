@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name                = 'nimona'
-  s.version             = '0.0.1'
+  s.version             = '0.0.6'
   s.summary             = 'Nimona Flutter Plugin.'
   s.description         = 'Nimona Flutter Plugin.'
   s.homepage            = 'https://github.com/nimona/flutter-nimona'

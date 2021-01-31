@@ -5,6 +5,7 @@ import (
 	"errors"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"nimona.io/pkg/config"
 	"nimona.io/pkg/context"
@@ -299,10 +300,18 @@ func (p *Provider) RequestStream(
 	}
 	for _, recipient := range recipients {
 		go func(recipient *peer.ConnectionInfo) {
+			ctx := context.New(
+				context.WithTimeout(10 * time.Second),
+			)
+			_, err := p.objectmanager.Request(ctx, rootHash, recipient)
+			if err != nil {
+				return
+			}
 			r, err := p.objectmanager.RequestStream(ctx, rootHash, recipient)
 			if err != nil {
 				return
 			}
+			object.ReadAll(r)
 			r.Close()
 		}(recipient)
 	}
@@ -313,6 +322,7 @@ func (p *Provider) Put(
 	ctx context.Context,
 	obj *object.Object,
 ) (*object.Object, error) {
+	obj = object.Copy(obj)
 	switch obj.Metadata.Owner {
 	case "@peer":
 		obj.Metadata.Owner = p.local.GetPrimaryPeerKey().PublicKey()

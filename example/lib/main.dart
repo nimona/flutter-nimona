@@ -20,20 +20,15 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  String _result = "";
+  String _version = "";
 
   @override
   void initState() {
     super.initState();
-    setup();
-  }
-
-  Future<void> setup() async {
-    Nimona.subscribe("foo");
-    var stream = Nimona.pop("foo");
-    stream.listen((event) {
+    // Nimona.init();
+    Nimona.version().then((version) {
       setState(() {
-        _result = event.toString();
+        _version = version;
       });
     });
   }
@@ -49,7 +44,7 @@ class _MyAppState extends State<MyApp> {
       home: Scaffold(
         body: Container(
           child: Center(
-            child: Text(_result),
+            child: Text(_version),
           ),
         ),
       ),

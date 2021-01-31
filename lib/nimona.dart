@@ -16,6 +16,10 @@ class Nimona {
     return Binding().subscribe(lookup);
   }
 
+  static Future<String> version() {
+    return Binding().version();
+  }
+
   static Future<void> cancel(String key) {
     return Binding().cancel(key);
   }
