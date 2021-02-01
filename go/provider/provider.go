@@ -96,6 +96,36 @@ func New() *Provider {
 	// add bootstrap peers as relays
 	local.PutRelays(bootstrapPeers...)
 
+	// construct object store
+	db, err := sql.Open("sqlite3", filepath.Join(nConfig.Path, "nimona.db"))
+	if err != nil {
+		logger.Fatal("error opening sql file", log.Error(err))
+	}
+
+	str, err := sqlobjectstore.New(db)
+	if err != nil {
+		logger.Fatal("error starting sql store", log.Error(err))
+	}
+
+	// TODO application specific
+	// register all stream roots
+	r, err := str.Filter(
+		sqlobjectstore.FilterByObjectType("stream:poc.nimona.io/conversation"),
+	)
+	if err == nil {
+		hs := []object.Hash{}
+		for {
+			o, err := r.Read()
+			if err != nil || o == nil {
+				break
+			}
+			hs = append(hs, o.Hash())
+		}
+		if len(hs) > 0 {
+			local.PutContentHashes(hs...)
+		}
+	}
+
 	// construct new resolver
 	res := resolver.New(
 		ctx,
@@ -113,17 +143,6 @@ func New() *Provider {
 		log.Any("addresses", local.GetAddresses()),
 	)
 
-	// construct object store
-	db, err := sql.Open("sqlite3", filepath.Join(nConfig.Path, "nimona.db"))
-	if err != nil {
-		logger.Fatal("error opening sql file", log.Error(err))
-	}
-
-	str, err := sqlobjectstore.New(db)
-	if err != nil {
-		logger.Fatal("error starting sql store", log.Error(err))
-	}
-
 	// construct manager
 	man := objectmanager.New(
 		ctx,
@@ -140,30 +159,6 @@ func New() *Provider {
 		"poc.nimona.io/conversation.MessageAdded",    // new(ConversationNicknameUpdated).Type(),
 		"nimona.io/stream.Subscription",              // new(stream.Subscription).Type(),
 	)
-
-	// conversationRootObject := conversationRoot.ToObject()
-	// conversationRootHash := conversationRootObject.Hash()
-
-	// // register conversation in object manager
-	// if _, err := man.Put(ctx, conversationRootObject); err != nil {
-	// 	logger.Fatal("could not persist conversation root", log.Error(err))
-	// }
-
-	// // add conversation to the list of content we provide
-	// local.PutContentHashes(conversationRootHash)
-
-	r, err := str.Filter(
-		sqlobjectstore.FilterByObjectType("stream:poc.nimona.io/conversation"),
-	)
-	if err == nil {
-		for {
-			o, err := r.Read()
-			if err != nil || o == nil {
-				break
-			}
-			local.PutContentHashes(o.Hash())
-		}
-	}
 
 	return &Provider{
 		local:         local,
