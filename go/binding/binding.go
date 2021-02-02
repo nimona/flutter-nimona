@@ -174,6 +174,9 @@ func NimonaBridgeCall(
 	case "getFeedRootHash":
 		feedRootHash := nimonaProvider.GetFeedRootHash(string(payloadBytes))
 		return renderBytes([]byte(feedRootHash), nil)
+	case "getConnectionInfo":
+		o := nimonaProvider.GetConnectionInfo().ToObject()
+		return renderObject(o)
 	}
 
 	return renderBytes([]byte("error"), errors.New(nameString+" not implemented"))

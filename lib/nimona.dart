@@ -39,4 +39,8 @@ class Nimona {
   static Future<String> getFeedRootHash(String streamRootType) {
     return Binding().getFeedRootHash(streamRootType);
   }
+
+  static Future<String> getConnectionInfo() {
+    return Binding().getConnectionInfo();
+  }
 }
