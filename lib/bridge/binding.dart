@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:ffi' as ffi;
 import 'dart:io' show Platform;
 import 'dart:io';
@@ -41,7 +42,7 @@ class Binding {
     Completer<Uint8List> completer = new Completer();
 
     StreamSubscription subscription;
-    // TODO 
+    // TODO
     subscription = port.listen((message) async {
       // TODO add try catch
       await subscription?.cancel();
@@ -97,13 +98,13 @@ class Binding {
       String reqJSON = req.toJson();
       Uint8List body = await callAsync(
         'get',
-        Uint8List.fromList(reqJSON.codeUnits),
+        stringToBytes(reqJSON),
       );
       if (body == null || body.isEmpty) {
         throw 'got empty response';
       }
       GetResponse resp = GetResponse.fromJson(
-        String.fromCharCodes(body),
+        bytesToString(body),
       );
       return resp.objectBodies;
     } on Exception catch (e) {
@@ -120,7 +121,7 @@ class Binding {
       if (r == null || r.isEmpty) {
         throw 'got empty response';
       }
-      return String.fromCharCodes(r);
+      return bytesToString(r);
     } on Exception catch (e) {
       throw e;
     }
@@ -130,42 +131,42 @@ class Binding {
     try {
       Uint8List r = await callAsync(
         'subscribe',
-        Uint8List.fromList(lookup.codeUnits),
+        stringToBytes(lookup),
       );
       if (r == null || r.isEmpty) {
         throw 'got empty response';
       }
-      return String.fromCharCodes(r);
+      return bytesToString(r);
     } on Exception catch (e) {
       throw e;
     }
   }
 
   Future<void> cancel(String key) async {
-    callAsync("cancel", Uint8List.fromList(key.codeUnits));
+    callAsync("cancel", stringToBytes(key));
   }
 
   Stream<String> pop(String key) async* {
     while (true) {
-      Uint8List r = await callAsync("pop", Uint8List.fromList(key.codeUnits));
-      yield String.fromCharCodes(r);
+      Uint8List r = await callAsync("pop", stringToBytes(key));
+      yield bytesToString(r);
     }
   }
 
   Future<void> requestStream(String rootHash) async {
-    await callAsync("requestStream", Uint8List.fromList(rootHash.codeUnits));
+    await callAsync("requestStream", stringToBytes(rootHash));
   }
 
   Future<String> put(String objectJSON) async {
     try {
       Uint8List r = await callAsync(
         'put',
-        Uint8List.fromList(objectJSON.codeUnits),
+        stringToBytes(objectJSON),
       );
       if (r == null || r.isEmpty) {
         throw 'got empty response';
       }
-      return String.fromCharCodes(r);
+      return bytesToString(r);
     } on Exception catch (e) {
       throw e;
     }
@@ -173,8 +174,13 @@ class Binding {
 
   Future<String> getFeedRootHash(String feedRoothash) async {
     Uint8List r = await callAsync(
-        "getFeedRootHash", Uint8List.fromList(feedRoothash.codeUnits));
-    return String.fromCharCodes(r);
+        "getFeedRootHash", stringToBytes(feedRoothash));
+    return bytesToString(r);
+  }
+
+  Future<String> getConnectionInfo() async {
+    Uint8List r = await callAsync("getConnectionInfo", Uint8List(0));
+    return bytesToString(r);
   }
 
   void handleError(ffi.Pointer<Utf8> error, ffi.Pointer pointer) {
@@ -199,4 +205,13 @@ class Binding {
     }
     throw ("not implemented");
   }
+}
+
+Uint8List stringToBytes(String s) {
+  return utf8.encode(s);
+}
+
+
+String bytesToString(Uint8List b) {
+  return utf8.decode(b);
 }
