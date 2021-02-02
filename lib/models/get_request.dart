@@ -3,14 +3,14 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 
 class GetRequest {
-  String lookup;
+  List<String> lookups;
   String orderBy;
   String orderDir;
   int limit;
   int offset;
 
   GetRequest({
-    this.lookup,
+    this.lookups,
     this.orderBy,
     this.orderDir,
     this.limit,
@@ -18,14 +18,14 @@ class GetRequest {
   });
 
   GetRequest copyWith({
-    String lookup,
+    List<String> lookups,
     String orderBy,
     String orderDir,
     int limit,
     int offset,
   }) {
     return GetRequest(
-      lookup: lookup ?? this.lookup,
+      lookups: lookups ?? this.lookups,
       orderBy: orderBy ?? this.orderBy,
       orderDir: orderDir ?? this.orderDir,
       limit: limit ?? this.limit,
@@ -35,7 +35,7 @@ class GetRequest {
 
   Map<String, dynamic> toMap() {
     return {
-      'lookup': lookup,
+      'lookups': lookups,
       'orderBy': orderBy,
       'orderDir': orderDir,
       'limit': limit,
@@ -47,7 +47,7 @@ class GetRequest {
     if (map == null) return null;
 
     return GetRequest(
-      lookup: map['lookup'],
+      lookups: map['lookups'],
       orderBy: map['orderBy'],
       orderDir: map['orderDir'],
       limit: map['limit'],
@@ -62,7 +62,7 @@ class GetRequest {
 
   @override
   String toString() {
-    return 'GetRequest(lookup: $lookup, orderBy: $orderBy, orderDir: $orderDir, limit: $limit, offset: $offset)';
+    return 'GetRequest(lookups: $lookups, orderBy: $orderBy, orderDir: $orderDir, limit: $limit, offset: $offset)';
   }
 
   @override
@@ -70,7 +70,7 @@ class GetRequest {
     if (identical(this, o)) return true;
 
     return o is GetRequest &&
-        o.lookup == lookup &&
+        o.lookups == lookups &&
         o.orderBy == orderBy &&
         o.orderDir == orderDir &&
         o.limit == limit &&
@@ -79,7 +79,7 @@ class GetRequest {
 
   @override
   int get hashCode {
-    return lookup.hashCode ^
+    return lookups.hashCode ^
         orderBy.hashCode ^
         orderDir.hashCode ^
         limit.hashCode ^

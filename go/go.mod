@@ -4,5 +4,5 @@ go 1.15
 
 require (
 	github.com/rs/xid v1.2.1
-	nimona.io v0.15.6-0.20210127185728-8515e2052737
+	nimona.io v0.15.6
 )

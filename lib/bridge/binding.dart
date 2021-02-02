@@ -10,6 +10,7 @@ import 'package:ffi/ffi.dart';
 import 'package:nimona/bridge/ffi.dart';
 import 'package:nimona/bridge/isolate.dart';
 import 'package:nimona/models/get_request.dart';
+import 'package:nimona/models/subscribe_request.dart';
 
 typedef StartWorkType = ffi.Void Function(ffi.Int64 port);
 typedef StartWorkFunc = void Function(int port);
@@ -44,12 +45,16 @@ class Binding {
     StreamSubscription subscription;
     // TODO
     subscription = port.listen((message) async {
-      // TODO add try catch
-      await subscription?.cancel();
-      if (message == null) {
-        completer.complete();
-      } else {
-        completer.complete(message);
+      try {
+        await subscription?.cancel();
+        if (message == null) {
+          completer.complete();
+        } else {
+          completer.complete(message);
+        }
+      } catch (e) {
+        print('++ callAsync(' + name + ') ERROR err=' + e.toString());
+        throw e;
       }
     });
     return completer.future;
@@ -127,11 +132,12 @@ class Binding {
     }
   }
 
-  Future<String> subscribe(String lookup) async {
+  Future<String> subscribe(SubscribeRequest req) async {
     try {
+      String reqJSON = req.toJson();
       Uint8List r = await callAsync(
         'subscribe',
-        stringToBytes(lookup),
+        stringToBytes(reqJSON),
       );
       if (r == null || r.isEmpty) {
         throw 'got empty response';
@@ -173,8 +179,8 @@ class Binding {
   }
 
   Future<String> getFeedRootHash(String feedRoothash) async {
-    Uint8List r = await callAsync(
-        "getFeedRootHash", stringToBytes(feedRoothash));
+    Uint8List r =
+        await callAsync("getFeedRootHash", stringToBytes(feedRoothash));
     return bytesToString(r);
   }
 
@@ -210,7 +216,6 @@ class Binding {
 Uint8List stringToBytes(String s) {
   return utf8.encode(s);
 }
-
 
 String bytesToString(Uint8List b) {
   return utf8.decode(b);

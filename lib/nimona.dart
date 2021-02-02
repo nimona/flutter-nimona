@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:nimona/bridge/binding.dart';
 import 'package:nimona/models/get_request.dart';
+import 'package:nimona/models/subscribe_request.dart';
 
 class Nimona {
   static void init() {
@@ -12,8 +13,8 @@ class Nimona {
     return Binding().get(req);
   }
 
-  static Future<String> subscribe(String lookup) {
-    return Binding().subscribe(lookup);
+  static Future<String> subscribe(SubscribeRequest req) {
+    return Binding().subscribe(req);
   }
 
   static Future<String> version() {

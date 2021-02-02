@@ -61,7 +61,7 @@ func NimonaBridgeCall(
 ) *C.BytesReturn {
 	nameString := C.GoString(name)
 	payloadBytes := C.GoBytes(payload, payloadSize)
-	fmt.Printf("> Called %s with %s\n", nameString, string(payloadBytes))
+	fmt.Printf("++ Called %s with %s\n", nameString, string(payloadBytes))
 
 	switch nameString {
 	case "init":
@@ -111,7 +111,11 @@ func NimonaBridgeCall(
 		ctx := context.New(
 			context.WithTimeout(3 * time.Second),
 		)
-		r, err := nimonaProvider.Subscribe(ctx, string(payloadBytes))
+		req := provider.SubscribeRequest{}
+		if err := json.Unmarshal(payloadBytes, &req); err != nil {
+			return renderBytes(nil, err)
+		}
+		r, err := nimonaProvider.Subscribe(ctx, req)
 		if err != nil {
 			fmt.Println("++ Call(subscribe) ERROR", err)
 			return renderBytes(nil, err)

@@ -154,10 +154,11 @@ func New() *Provider {
 	// TODO: application specifc
 	// register types so object manager persists them
 	local.PutContentTypes(
-		"stream:poc.nimona.io/conversation",          // new(ConversationStreamRoot).Type(),
-		"poc.nimona.io/conversation.NicknameUpdated", // new(ConversationMessageAdded).Type(),
-		"poc.nimona.io/conversation.MessageAdded",    // new(ConversationNicknameUpdated).Type(),
-		"nimona.io/stream.Subscription",              // new(stream.Subscription).Type(),
+		"stream:poc.nimona.io/conversation",
+		"poc.nimona.io/conversation.NicknameUpdated",
+		"poc.nimona.io/conversation.MessageAdded",
+		"poc.nimona.io/conversation.TopicUpdated",
+		"nimona.io/stream.Subscription",
 	)
 
 	return &Provider{
@@ -175,11 +176,11 @@ func (p *Provider) GetConnectionInfo() *peer.ConnectionInfo {
 }
 
 type GetRequest struct {
-	Lookup   string `json:"lookup"`
-	OrderBy  string `json:"orderBy"`
-	OrderDir string `json:"orderDir"`
-	Limit    int    `json:"limit"`
-	Offset   int    `json:"offset"`
+	Lookups  []string `json:"lookups"`
+	OrderBy  string   `json:"orderBy"`
+	OrderDir string   `json:"orderDir"`
+	Limit    int      `json:"limit"`
+	Offset   int      `json:"offset"`
 }
 
 type GetResponse struct {
@@ -191,53 +192,87 @@ func (p *Provider) Get(
 	req GetRequest,
 ) (object.ReadCloser, error) {
 	opts := []sqlobjectstore.FilterOption{}
-	parts := strings.Split(req.Lookup, ":")
-	if len(parts) < 2 {
-		return nil, errors.New("invalid lookup query")
+	filterByType := []string{}
+	filterByHash := []object.Hash{}
+	filterByOwner := []crypto.PublicKey{}
+	filterByStream := []object.Hash{}
+	for _, lookup := range req.Lookups {
+		parts := strings.Split(lookup, ":")
+		if len(parts) < 2 {
+			return nil, errors.New("invalid lookup query")
+		}
+		prefix := parts[0]
+		value := strings.Join(parts[1:], ":")
+		switch prefix {
+		case "type":
+			filterByType = append(
+				filterByType,
+				value,
+			)
+		case "hash":
+			filterByHash = append(
+				filterByHash,
+				object.Hash(value),
+			)
+		case "owner":
+			filterByOwner = append(
+				filterByOwner,
+				crypto.PublicKey(value),
+			)
+		case "stream":
+			filterByStream = append(
+				filterByStream,
+				object.Hash(value),
+			)
+		}
+		if req.OrderBy != "" {
+			opts = append(
+				opts,
+				sqlobjectstore.FilterOrderBy(req.OrderBy),
+			)
+		}
+		if req.OrderDir != "" {
+			opts = append(
+				opts,
+				sqlobjectstore.FilterOrderDir(req.OrderDir),
+			)
+		}
+		if req.Limit > 0 && req.Offset > 0 {
+			opts = append(
+				opts,
+				sqlobjectstore.FilterLimit(req.Limit, req.Offset),
+			)
+		}
 	}
-	prefix := parts[0]
-	value := strings.Join(parts[1:], ":")
-	switch prefix {
-	case "type":
+	if len(filterByType) > 0 {
 		opts = append(
 			opts,
-			sqlobjectstore.FilterByObjectType(value),
-		)
-	case "hash":
-		opts = append(
-			opts,
-			sqlobjectstore.FilterByHash(object.Hash(value)),
-		)
-	case "owner":
-		opts = append(
-			opts,
-			sqlobjectstore.FilterByOwner(crypto.PublicKey(value)),
-		)
-	case "stream":
-		opts = append(
-			opts,
-			sqlobjectstore.FilterByStreamHash(object.Hash(value)),
+			sqlobjectstore.FilterByObjectType(filterByType...),
 		)
 	}
-	if req.OrderBy != "" {
+	if len(filterByHash) > 0 {
 		opts = append(
 			opts,
-			sqlobjectstore.FilterOrderBy(req.OrderBy),
+			sqlobjectstore.FilterByHash(filterByHash...),
 		)
 	}
-	if req.OrderDir != "" {
+	if len(filterByOwner) > 0 {
 		opts = append(
 			opts,
-			sqlobjectstore.FilterOrderDir(req.OrderDir),
+			sqlobjectstore.FilterByOwner(filterByOwner...),
 		)
 	}
-	if req.Limit > 0 && req.Offset > 0 {
+	if len(filterByStream) > 0 {
 		opts = append(
 			opts,
-			sqlobjectstore.FilterLimit(req.Limit, req.Offset),
+			sqlobjectstore.FilterByStreamHash(filterByStream...),
 		)
 	}
 	return p.objectstore.Filter(opts...)
+}
+
+type SubscribeRequest struct {
+	Lookups []string `json:"lookups"`
 }
 
 // payload should start with one of the following:
@@ -247,35 +282,65 @@ func (p *Provider) Get(
 // - owner:<publicKey>
 func (p *Provider) Subscribe(
 	ctx context.Context,
-	lookup string,
+	req SubscribeRequest,
 ) (object.ReadCloser, error) {
 	opts := []objectmanager.LookupOption{}
-	parts := strings.Split(lookup, ":")
-	if len(parts) < 2 {
-		return nil, errors.New("invalid lookup query")
+	filterByType := []string{}
+	filterByHash := []object.Hash{}
+	filterByOwner := []crypto.PublicKey{}
+	filterByStream := []object.Hash{}
+	for _, lookup := range req.Lookups {
+		parts := strings.Split(lookup, ":")
+		if len(parts) < 2 {
+			return nil, errors.New("invalid lookup query")
+		}
+		prefix := parts[0]
+		value := strings.Join(parts[1:], ":")
+		switch prefix {
+		case "type":
+			filterByType = append(
+				filterByType,
+				value,
+			)
+		case "hash":
+			filterByHash = append(
+				filterByHash,
+				object.Hash(value),
+			)
+		case "owner":
+			filterByOwner = append(
+				filterByOwner,
+				crypto.PublicKey(value),
+			)
+		case "stream":
+			filterByStream = append(
+				filterByStream,
+				object.Hash(value),
+			)
+		}
 	}
-	prefix := parts[0]
-	value := strings.Join(parts[1:], ":")
-	switch prefix {
-	case "type":
+	if len(filterByType) > 0 {
 		opts = append(
 			opts,
-			objectmanager.FilterByObjectType(value),
+			objectmanager.FilterByObjectType(filterByType...),
 		)
-	case "hash":
+	}
+	if len(filterByHash) > 0 {
 		opts = append(
 			opts,
-			objectmanager.FilterByHash(object.Hash(value)),
+			objectmanager.FilterByHash(filterByHash...),
 		)
-	case "owner":
+	}
+	if len(filterByOwner) > 0 {
 		opts = append(
 			opts,
-			objectmanager.FilterByOwner(crypto.PublicKey(value)),
+			objectmanager.FilterByOwner(filterByOwner...),
 		)
-	case "stream":
+	}
+	if len(filterByStream) > 0 {
 		opts = append(
 			opts,
-			objectmanager.FilterByStreamHash(object.Hash(value)),
+			objectmanager.FilterByStreamHash(filterByStream...),
 		)
 	}
 	reader := p.objectmanager.Subscribe(opts...)
