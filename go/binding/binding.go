@@ -43,7 +43,7 @@ func renderBytes(b []byte, err error) *C.BytesReturn {
 
 func marshalObject(o *object.Object) ([]byte, error) {
 	m := object.Copy(o).ToMap()
-	m["_hash:s"] = o.Hash().String()
+	m["_hash:s"] = object.String(o.Hash())
 	return json.Marshal(m)
 }
 
@@ -145,9 +145,9 @@ func NimonaBridgeCall(
 		if !ok {
 			return renderBytes(nil, errors.New("missing subscription key"))
 		}
-		subscriptionsMutex.Unlock()
 		r.Close()
 		delete(subscriptions, string(payloadBytes))
+		subscriptionsMutex.Unlock()
 		return renderBytes(nil, nil)
 	case "requestStream":
 		ctx := context.New(
@@ -164,11 +164,10 @@ func NimonaBridgeCall(
 		ctx := context.New(
 			context.WithTimeout(3 * time.Second),
 		)
-		m := map[string]interface{}{}
-		if err := json.Unmarshal(payloadBytes, &m); err != nil {
+		o := &object.Object{}
+		if err := json.Unmarshal(payloadBytes, o); err != nil {
 			return renderBytes(nil, err)
 		}
-		o := object.FromMap(m)
 		u, err := nimonaProvider.Put(ctx, o)
 		if err != nil {
 			fmt.Println("++ Call(put) ERROR", err)

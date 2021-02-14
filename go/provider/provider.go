@@ -3,6 +3,7 @@ package provider
 import (
 	"database/sql"
 	"errors"
+	"os/user"
 	"path/filepath"
 	"strings"
 	"time"
@@ -45,8 +46,12 @@ func New() *Provider {
 		log.String("build.timestamp", version.Date),
 	)
 
+	currentUser, _ := user.Current()
 	cConfig := &Config{}
 	nConfig, err := config.New(
+		config.WithDefaultPath(
+			filepath.Join(currentUser.HomeDir, ".mochi"),
+		),
 		config.WithExtraConfig("CHAT", cConfig),
 		config.WithDefaultListenOnLocalIPs(),
 		config.WithDefaultListenOnPrivateIPs(),
