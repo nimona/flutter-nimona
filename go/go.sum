@@ -627,7 +627,7 @@ honnef.co/go/tools v0.0.0-20190523083050-ea95bdfd59fc/go.mod h1:rf3lG4BRIbNafJWh
 honnef.co/go/tools v0.0.1-2019.2.3/go.mod h1:a3bituU0lyd329TUQxRnasdCoJDkEUEAqEt0JzvZhAg=
 honnef.co/go/tools v0.0.1-2020.1.6/go.mod h1:pyyisuGw24ruLjrr1ddx39WE0y9OooInRzEYLhQB2YY=
 k8s.io/klog v1.0.0/go.mod h1:4Bi6QPql/J/LkTDqv7R/cd3hPo4k2DG6Ptcz060Ez5I=
-nimona.io v0.16.2 h1:D/MW5a72SDTQAEPmep+BNTm/orD56BcvzscWPIh2AL8=
-nimona.io v0.16.2/go.mod h1:Jcxf4/W2Gham5G3lUDhyb2OQIwkDVG5CKFVWWQ1Ju5M=
+nimona.io v0.16.3 h1:TBhO79AZoylmG2p+PNlwb2ovgLXaJpjAQI6nTFIyCNk=
+nimona.io v0.16.3/go.mod h1:Jcxf4/W2Gham5G3lUDhyb2OQIwkDVG5CKFVWWQ1Ju5M=
 sigs.k8s.io/yaml v1.1.0/go.mod h1:UJmg0vDUVViEyp3mgSv9WPwZCDxu4rQW1olrI1uml+o=
 sourcegraph.com/sourcegraph/appdash v0.0.0-20190731080439-ebfcffb1b5c0/go.mod h1:hI742Nqp5OhwiqlzhgfbWU4mW4yO10fP+LoT9WOswdU=
