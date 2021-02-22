@@ -118,16 +118,16 @@ func New() *Provider {
 		sqlobjectstore.FilterByObjectType("stream:poc.nimona.io/conversation"),
 	)
 	if err == nil {
-		hs := []object.Hash{}
+		hs := []object.CID{}
 		for {
 			o, err := r.Read()
 			if err != nil || o == nil {
 				break
 			}
-			hs = append(hs, o.Hash())
+			hs = append(hs, o.CID())
 		}
 		if len(hs) > 0 {
-			local.PutContentHashes(hs...)
+			local.PutCIDs(hs...)
 		}
 	}
 
@@ -198,9 +198,9 @@ func (p *Provider) Get(
 ) (object.ReadCloser, error) {
 	opts := []sqlobjectstore.FilterOption{}
 	filterByType := []string{}
-	filterByHash := []object.Hash{}
+	filterByCID := []object.CID{}
 	filterByOwner := []crypto.PublicKey{}
-	filterByStream := []object.Hash{}
+	filterByStreamCID := []object.CID{}
 	for _, lookup := range req.Lookups {
 		parts := strings.Split(lookup, ":")
 		if len(parts) < 2 {
@@ -214,10 +214,10 @@ func (p *Provider) Get(
 				filterByType,
 				value,
 			)
-		case "hash":
-			filterByHash = append(
-				filterByHash,
-				object.Hash(value),
+		case "cid":
+			filterByCID = append(
+				filterByCID,
+				object.CID(value),
 			)
 		case "owner":
 			filterByOwner = append(
@@ -225,9 +225,9 @@ func (p *Provider) Get(
 				crypto.PublicKey(value),
 			)
 		case "stream":
-			filterByStream = append(
-				filterByStream,
-				object.Hash(value),
+			filterByStreamCID = append(
+				filterByStreamCID,
+				object.CID(value),
 			)
 		}
 		if req.OrderBy != "" {
@@ -255,10 +255,10 @@ func (p *Provider) Get(
 			sqlobjectstore.FilterByObjectType(filterByType...),
 		)
 	}
-	if len(filterByHash) > 0 {
+	if len(filterByCID) > 0 {
 		opts = append(
 			opts,
-			sqlobjectstore.FilterByHash(filterByHash...),
+			sqlobjectstore.FilterByCID(filterByCID...),
 		)
 	}
 	if len(filterByOwner) > 0 {
@@ -267,10 +267,10 @@ func (p *Provider) Get(
 			sqlobjectstore.FilterByOwner(filterByOwner...),
 		)
 	}
-	if len(filterByStream) > 0 {
+	if len(filterByStreamCID) > 0 {
 		opts = append(
 			opts,
-			sqlobjectstore.FilterByStreamHash(filterByStream...),
+			sqlobjectstore.FilterByStreamCID(filterByStreamCID...),
 		)
 	}
 	return p.objectstore.Filter(opts...)
@@ -282,7 +282,7 @@ type SubscribeRequest struct {
 
 // payload should start with one of the following:
 // - type:<type>
-// - hash:<hash>
+// - cid:<cid>
 // - stream:<rootHash>
 // - owner:<publicKey>
 func (p *Provider) Subscribe(
@@ -291,9 +291,9 @@ func (p *Provider) Subscribe(
 ) (object.ReadCloser, error) {
 	opts := []objectmanager.LookupOption{}
 	filterByType := []string{}
-	filterByHash := []object.Hash{}
+	filterByCID := []object.CID{}
 	filterByOwner := []crypto.PublicKey{}
-	filterByStream := []object.Hash{}
+	filterByStreamCID := []object.CID{}
 	for _, lookup := range req.Lookups {
 		parts := strings.Split(lookup, ":")
 		if len(parts) < 2 {
@@ -307,10 +307,10 @@ func (p *Provider) Subscribe(
 				filterByType,
 				value,
 			)
-		case "hash":
-			filterByHash = append(
-				filterByHash,
-				object.Hash(value),
+		case "cid":
+			filterByCID = append(
+				filterByCID,
+				object.CID(value),
 			)
 		case "owner":
 			filterByOwner = append(
@@ -318,9 +318,9 @@ func (p *Provider) Subscribe(
 				crypto.PublicKey(value),
 			)
 		case "stream":
-			filterByStream = append(
-				filterByStream,
-				object.Hash(value),
+			filterByStreamCID = append(
+				filterByStreamCID,
+				object.CID(value),
 			)
 		}
 	}
@@ -330,10 +330,10 @@ func (p *Provider) Subscribe(
 			objectmanager.FilterByObjectType(filterByType...),
 		)
 	}
-	if len(filterByHash) > 0 {
+	if len(filterByCID) > 0 {
 		opts = append(
 			opts,
-			objectmanager.FilterByHash(filterByHash...),
+			objectmanager.FilterByCID(filterByCID...),
 		)
 	}
 	if len(filterByOwner) > 0 {
@@ -342,10 +342,10 @@ func (p *Provider) Subscribe(
 			objectmanager.FilterByOwner(filterByOwner...),
 		)
 	}
-	if len(filterByStream) > 0 {
+	if len(filterByStreamCID) > 0 {
 		opts = append(
 			opts,
-			objectmanager.FilterByStreamHash(filterByStream...),
+			objectmanager.FilterByStreamCID(filterByStreamCID...),
 		)
 	}
 	reader := p.objectmanager.Subscribe(opts...)
@@ -354,11 +354,11 @@ func (p *Provider) Subscribe(
 
 func (p *Provider) RequestStream(
 	ctx context.Context,
-	rootHash object.Hash,
+	rootHash object.CID,
 ) error {
 	recipients, err := p.resolver.Lookup(
 		ctx,
-		resolver.LookupByContentHash(rootHash),
+		resolver.LookupByCID(rootHash),
 	)
 	if err != nil {
 		return err
@@ -397,14 +397,14 @@ func (p *Provider) Put(
 	return p.objectmanager.Put(ctx, obj)
 }
 
-func (p *Provider) GetFeedRootHash(
+func (p *Provider) GetFeedRootCID(
 	streamRootObjectType string,
-) object.Hash {
+) object.CID {
 	v := &feed.FeedStreamRoot{
 		ObjectType: streamRootObjectType,
 		Metadata: object.Metadata{
 			Owner: p.local.GetPrimaryPeerKey().PublicKey(),
 		},
 	}
-	return v.ToObject().Hash()
+	return v.ToObject().CID()
 }

@@ -43,7 +43,7 @@ func renderBytes(b []byte, err error) *C.BytesReturn {
 
 func marshalObject(o *object.Object) ([]byte, error) {
 	m := object.Copy(o).ToMap()
-	m["_hash"] = object.String(o.Hash())
+	m["_cid"] = object.String(o.CID())
 	return json.Marshal(m)
 }
 
@@ -155,7 +155,7 @@ func NimonaBridgeCall(
 		)
 		if err := nimonaProvider.RequestStream(
 			ctx,
-			object.Hash(string(payloadBytes)),
+			object.CID(string(payloadBytes)),
 		); err != nil {
 			return renderBytes(nil, err)
 		}
@@ -174,9 +174,9 @@ func NimonaBridgeCall(
 			return renderBytes(nil, err)
 		}
 		return renderObject(u)
-	case "getFeedRootHash":
-		feedRootHash := nimonaProvider.GetFeedRootHash(string(payloadBytes))
-		return renderBytes([]byte(feedRootHash), nil)
+	case "getFeedRootCID":
+		feedRootCID := nimonaProvider.GetFeedRootCID(string(payloadBytes))
+		return renderBytes([]byte(feedRootCID), nil)
 	case "getConnectionInfo":
 		o := nimonaProvider.GetConnectionInfo().ToObject()
 		return renderObject(o)
