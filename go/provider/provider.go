@@ -76,7 +76,7 @@ func New() *Provider {
 
 	if nConfig.Peer.BindAddress != "" {
 		// start listening
-		lis, err := net.Listen(
+		_, err := net.Listen(
 			ctx,
 			nConfig.Peer.BindAddress,
 			network.ListenOnLocalIPs,
@@ -86,7 +86,6 @@ func New() *Provider {
 		if err != nil {
 			logger.Fatal("error while listening", log.Error(err))
 		}
-		defer lis.Close() // nolint: errcheck
 	}
 
 	// convert shorthands into connection infos
