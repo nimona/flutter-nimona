@@ -80,7 +80,8 @@ func New() *Provider {
 			ctx,
 			nConfig.Peer.BindAddress,
 			network.ListenOnLocalIPs,
-			// network.ListenOnExternalPort,
+			network.ListenOnPrivateIPs,
+			network.ListenOnExternalPort,
 		)
 		if err != nil {
 			logger.Fatal("error while listening", log.Error(err))
