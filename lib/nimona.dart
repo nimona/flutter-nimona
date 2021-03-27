@@ -1,12 +1,15 @@
 import 'dart:async';
 
 import 'package:nimona/bridge/binding.dart';
+import 'package:nimona/models/connection_info.dart';
 import 'package:nimona/models/get_request.dart';
+import 'package:nimona/models/init_request.dart';
 import 'package:nimona/models/subscribe_request.dart';
+import 'package:nimona/unmarshal.dart';
 
 class Nimona {
-  static void init() {
-    return Binding().init();
+  static Future<void> init(InitRequest req) {
+    return Binding().init(req);
   }
 
   static Future<List<String>> get(GetRequest req) {
@@ -41,7 +44,15 @@ class Nimona {
     return Binding().getFeedRootHash(streamRootType);
   }
 
-  static Future<String> getConnectionInfo() {
-    return Binding().getConnectionInfo();
+  static Future<ConnectionInfo> getConnectionInfo() async {
+    final res = await Binding().getConnectionInfo();
+    final typ = unmarshal(res);
+    print(">>>>" + res);
+    if (typ is ConnectionInfo) {
+      print("+++"+ typ.dataM!.publicKeyS!);
+      return typ;
+    } else {
+      throw 'getConnectionInfo() ERROR';
+    }
   }
 }

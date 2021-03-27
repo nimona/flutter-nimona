@@ -10,6 +10,7 @@ import 'package:ffi/ffi.dart';
 import 'package:nimona/bridge/ffi.dart';
 import 'package:nimona/bridge/isolate.dart';
 import 'package:nimona/models/get_request.dart';
+import 'package:nimona/models/init_request.dart';
 import 'package:nimona/models/subscribe_request.dart';
 
 typedef StartWorkType = ffi.Void Function(ffi.Int64 port);
@@ -94,8 +95,20 @@ class Binding {
     return output;
   }
 
-  void init() {
-    call("init", Uint8List(0));
+  Future<void> init(InitRequest req) async {
+    try {
+      String reqJSON = req.toJson();
+      Uint8List body = await callAsync(
+        'init',
+        stringToBytes(reqJSON),
+      );
+      if (body == null || body.isEmpty) {
+        throw 'got empty response';
+      }
+      return;
+    } on Exception catch (e) {
+      throw e;
+    }
   }
 
   Future<List<String>> get(GetRequest req) async {
