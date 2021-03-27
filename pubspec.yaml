@@ -25,3 +25,7 @@ flutter:
         pluginClass: NimonaPlugin
       ios:
         pluginClass: NimonaPlugin
+      linux:
+        pluginClass: NimonaPlugin
+      windows:
+        pluginClass: NimonaPlugin
