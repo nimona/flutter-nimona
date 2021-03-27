@@ -17,9 +17,10 @@ typedef StartWorkFunc = void Function(int port);
 
 class Binding {
   static final String _callFuncName = 'NimonaBridgeCall';
+  static final String _libraryName = 'libnimona';
   static final Binding _singleton = Binding._internal();
 
-  ffi.DynamicLibrary _library;
+  ffi.DynamicLibrary? _library;
 
   factory Binding() {
     return _singleton;
@@ -42,7 +43,7 @@ class Binding {
 
     Completer<Uint8List> completer = new Completer();
 
-    StreamSubscription subscription;
+    StreamSubscription? subscription;
     // TODO
     subscription = port.listen((message) async {
       try {
@@ -66,31 +67,30 @@ class Binding {
   }
 
   Future<Uint8List> call(String name, Uint8List payload) async {
-    final callable = _library
+    final callable = _library!
         .lookup<ffi.NativeFunction<call_func>>(_callFuncName)
         .asFunction<Call>();
 
-    final pointer = allocate<ffi.Uint8>(count: payload.length);
+    final pointer = malloc<ffi.Uint8>(payload.length);
 
     // https://github.com/dart-lang/ffi/issues/27
     // https://github.com/objectbox/objectbox-dart/issues/69
     for (var i = 0; i < payload.length; i++) {
       pointer[i] = payload[i];
     }
+    final payloadPointer = pointer.cast<ffi.Void>();
+    final namePointer = toUtf8(name);
 
-    final voidStar = pointer.cast<ffi.Void>();
-    final nameRef = toUtf8(name);
+    final result = callable(namePointer, payloadPointer, payload.length);
 
-    final result =
-        callable(nameRef, voidStar, payload.length).cast<FFIBytesReturn>().ref;
+    malloc.free(namePointer);
+    malloc.free(payloadPointer);
 
-    free(nameRef);
-    free(voidStar);
+    handleError(result.ref.error, result);
 
-    handleError(result.error, result.addressOf);
-
-    final output = result.message.cast<ffi.Uint8>().asTypedList(result.size);
-    free(result.addressOf);
+    final output =
+        result.ref.message.cast<ffi.Uint8>().asTypedList(result.ref.size);
+    freeResult(result);
     return output;
   }
 
@@ -189,32 +189,48 @@ class Binding {
     return bytesToString(r);
   }
 
-  void handleError(ffi.Pointer<Utf8> error, ffi.Pointer pointer) {
+  void handleError(
+      ffi.Pointer<Utf8> error, ffi.Pointer<FFIBytesReturn> result) {
     if (error.address != ffi.nullptr.address) {
       var message = fromUtf8(error);
-      free(pointer);
+      freeResult(result);
       throw message;
     }
   }
 
-  ffi.Pointer<Utf8> toUtf8(String text) {
-    return text == null ? Utf8.toUtf8("") : Utf8.toUtf8(text);
+  ffi.Pointer<Utf8> toUtf8(String? text) {
+    return text == null ? "".toNativeUtf8() : text.toNativeUtf8();
   }
 
-  String fromUtf8(ffi.Pointer<Utf8> text) {
-    return text == null ? "" : Utf8.fromUtf8(text);
+  String fromUtf8(ffi.Pointer<Utf8>? text) {
+    return text == null ? "" : text.toDartString();
+  }
+
+  void freeResult(ffi.Pointer<FFIBytesReturn> result) {
+    if (!Platform.isWindows) {
+      malloc.free(result);
+    }
   }
 
   ffi.DynamicLibrary openLib() {
-    if (Platform.isMacOS || Platform.isIOS) {
+    if (Platform.isMacOS) {
+      return ffi.DynamicLibrary.open("$_libraryName.dylib");
+    }
+    if (Platform.isWindows) {
+      return ffi.DynamicLibrary.open("$_libraryName.dll");
+    }
+    if (Platform.isIOS) {
       return ffi.DynamicLibrary.process();
     }
-    throw ("not implemented");
+    if (Platform.isLinux) {
+      return ffi.DynamicLibrary.open("$_libraryName.so");
+    }
+    return ffi.DynamicLibrary.open("$_libraryName.so");
   }
 }
 
 Uint8List stringToBytes(String s) {
-  return utf8.encode(s);
+  return Uint8List.fromList(utf8.encode(s));
 }
 
 String bytesToString(Uint8List b) {

@@ -1,3 +1,12 @@
+.PHONY: setup
+setup:
+	flutter channel master
+	flutter upgrade
+	flutter config --enable-windows-desktop
+	flutter config --enable-macos-desktop
+	flutter config --enable-linux-desktop
+	sudo gem install cocoapods
+
 GOMOBILE_PKG := nimona.io/plugins/flutter
 APP_PATH := $(CURDIR)
 

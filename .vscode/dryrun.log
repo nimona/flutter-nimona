@@ -1,0 +1,17 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory `/Users/geoah/src/github/nimona/nimona'
+cd go/binding; \
+		BINDING_ARGS="-tags ios" \
+		CGO_CFLAGS="-fembed-bitcode" \
+		CGO_ENABLED=1 \
+		GOARCH=arm64 \
+		GOOS=darwin \
+		SDK=iphoneos CC=/Users/geoah/src/github/nimona/nimona/clangwrap.sh \
+		go build \
+		--buildmode=c-archive \
+		-o /Users/geoah/src/github/nimona/nimona/ios/libnimona.a
+make: Leaving directory `/Users/geoah/src/github/nimona/nimona'
+ 
+Makefile:15: warning: overriding commands for target `bind-ios'
+Makefile:6: warning: ignoring old commands for target `bind-ios'
+ 

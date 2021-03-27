@@ -10,19 +10,19 @@ class GetRequest {
   int offset;
 
   GetRequest({
-    this.lookups,
-    this.orderBy,
-    this.orderDir,
-    this.limit,
-    this.offset,
+    required this.lookups,
+    required this.orderBy,
+    required this.orderDir,
+    required this.limit,
+    required this.offset,
   });
 
   GetRequest copyWith({
-    List<String> lookups,
-    String orderBy,
-    String orderDir,
-    int limit,
-    int offset,
+    List<String>? lookups,
+    String? orderBy,
+    String? orderDir,
+    int? limit,
+    int? offset,
   }) {
     return GetRequest(
       lookups: lookups ?? this.lookups,
@@ -44,8 +44,6 @@ class GetRequest {
   }
 
   factory GetRequest.fromMap(Map<String, dynamic> map) {
-    if (map == null) return null;
-
     return GetRequest(
       lookups: map['lookups'],
       orderBy: map['orderBy'],
@@ -91,11 +89,11 @@ class GetResponse {
   List<String> objectBodies;
 
   GetResponse({
-    this.objectBodies,
+    required this.objectBodies,
   });
 
   GetResponse copyWith({
-    List<String> objectBodies,
+    List<String>? objectBodies,
   }) {
     return GetResponse(
       objectBodies: objectBodies ?? this.objectBodies,
@@ -109,8 +107,6 @@ class GetResponse {
   }
 
   factory GetResponse.fromMap(Map<String, dynamic> map) {
-    if (map == null) return null;
-  
     return GetResponse(
       objectBodies: List<String>.from(map['objectBodies']),
     );
@@ -118,7 +114,8 @@ class GetResponse {
 
   String toJson() => json.encode(toMap());
 
-  factory GetResponse.fromJson(String source) => GetResponse.fromMap(json.decode(source));
+  factory GetResponse.fromJson(String source) =>
+      GetResponse.fromMap(json.decode(source));
 
   @override
   String toString() => 'GetResponse(objectBodies: $objectBodies)';
@@ -126,9 +123,8 @@ class GetResponse {
   @override
   bool operator ==(Object o) {
     if (identical(this, o)) return true;
-  
-    return o is GetResponse &&
-      listEquals(o.objectBodies, objectBodies);
+
+    return o is GetResponse && listEquals(o.objectBodies, objectBodies);
   }
 
   @override

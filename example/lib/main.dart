@@ -20,7 +20,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  String _version = "";
+  String _version = "unknown";
 
   @override
   void initState() {

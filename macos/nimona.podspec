@@ -12,6 +12,6 @@ Pod::Spec.new do |s|
   s.platform            = :osx, '10.11'
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
   s.swift_version       = '5.0'
-  s.vendored_libraries  = '*.a'
-  s.xcconfig            = { 'OTHER_LDFLAGS' => '-force_load "${PODS_ROOT}/../Flutter/ephemeral/.symlinks/plugins/nimona/macos/libnimona.a"'}
+  s.resources           = ['libnimona.dylib']
+  s.xcconfig            = { 'LD_RUNPATH_SEARCH_PATHS' => '@loader_path/../Frameworks/nimona.framework/Resources' }
 end
