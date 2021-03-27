@@ -1,0 +1,22 @@
+PODS:
+  - Flutter (1.0.0)
+  - nimona (0.0.6):
+    - Flutter
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - nimona (from `.symlinks/plugins/nimona/ios`)
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  nimona:
+    :path: ".symlinks/plugins/nimona/ios"
+
+SPEC CHECKSUMS:
+  Flutter: 434fef37c0980e73bb6479ef766c45957d4b510c
+  nimona: 118fd1ccb12d2bd287e73f82c87b8f3019c91b31
+
+PODFILE CHECKSUM: aafe91acc616949ddb318b77800a7f51bffa2a4c
+
+COCOAPODS: 1.10.1

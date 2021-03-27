@@ -6,8 +6,13 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # PARTICULAR PURPOSE.
 
 # This program built for i386-apple-darwin11.3.0
+ 
+Makefile:24: warning: overriding commands for target `bind-ios'
+Makefile:15: warning: ignoring old commands for target `bind-ios'
+make: *** No rule to make target `all'.  Stop.
+ 
 
-# Make data base, printed on Sat Mar 27 11:33:06 2021
+# Make data base, printed on Sat Mar 27 13:44:16 2021
 
 # Variables
 
@@ -20,6 +25,7 @@ ELECTRON_NO_ATTACH_CONSOLE = 1
 # environment
 VSCODE_LOG_NATIVE = false
 # automatic
+ 
 ?D = $(patsubst %/,%,$(dir $?))
 # automatic
 @D = $(patsubst %/,%,$(dir $@))
@@ -45,7 +51,7 @@ VSCODE_VERBOSE_LOGGING = true
 __CFBundleIdentifier = com.googlecode.iterm2
 # environment
 VSCODE_IPC_HOOK_EXTHOST = /var/folders/6j/cb6jrsyj1255h5cd0kycwtqm0000gn/T/vscode-ipc-2bba704f-bdf2-4eb9-b4be-6be003f9baac.sock
-# makefile (from `Makefile', line 1)
+# makefile (from `Makefile', line 10)
 GOMOBILE_PKG := nimona.io/plugins/flutter
 # environment
 GOPROXY = https://proxy.golang.org,direct
@@ -73,7 +79,7 @@ ORIGINAL_XDG_CURRENT_DESKTOP = undefined
 GOMODCACHE = /Users/geoah/go/pkg/mod
 # environment
 HOME = /Users/geoah
-# makefile (from `Makefile', line 2)
+# makefile (from `Makefile', line 11)
 APP_PATH := /Users/geoah/src/github/nimona/nimona
 # default
 MAKEFILEPATH := /Applications/Xcode.app/Contents/Developer/Makefiles
@@ -102,7 +108,7 @@ MAKE_VERSION := 3.81
 # environment
 USER = geoah
 # makefile
-.DEFAULT_GOAL := bind-ios
+.DEFAULT_GOAL := setup
 # default
 MAKECMDGOALS := all
 # environment
@@ -124,6 +130,7 @@ VSCODE_IPC_HOOK = /Users/geoah/Library/Application Support/Code/1.54.3-main.sock
 # makefile
 MAKEFLAGS = Rrqp
 # environment
+ 
 MFLAGS = -Rrqp
 # automatic
 *D = $(patsubst %/,%,$(dir $*))
@@ -184,7 +191,22 @@ VSCODE_PID = 76324
 
 # Files
 
+setup:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  commands to execute (from `Makefile', line 3):
+	flutter channel master
+	flutter upgrade
+	flutter config --enable-windows-desktop
+	flutter config --enable-macos-desktop
+	flutter config --enable-linux-desktop
+	sudo gem install cocoapods
+	
+
 # Not a target:
+ 
 all:
 #  Command-line target.
 #  Implicit rule search has been done.
@@ -193,7 +215,7 @@ all:
 # variable set hash-table stats:
 # Load=0/32=0%, Rehash=0, Collisions=0/0=0%
 
-.PHONY: bind-ios bind bind-ios bind-macos
+.PHONY: setup bind-ios bind bind-ios bind-macos
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
@@ -203,7 +225,7 @@ bind-ios:
 #  Implicit rule search has not been done.
 #  File does not exist.
 #  File has not been updated.
-#  commands to execute (from `Makefile', line 15):
+#  commands to execute (from `Makefile', line 24):
 	cd go/binding; \
 	BINDING_ARGS="-tags ios" \
 	CGO_CFLAGS="-fembed-bitcode" \
@@ -225,7 +247,7 @@ bind-ios:
 # Not a target:
 Makefile:
 #  Implicit rule search has been done.
-#  Last modified 2021-03-27 02:17:26
+#  Last modified 2021-03-27 11:38:31
 #  File has been updated.
 #  Successfully updated.
 # variable set hash-table stats:
@@ -242,7 +264,7 @@ bind-macos:
 #  Implicit rule search has not been done.
 #  File does not exist.
 #  File has not been updated.
-#  commands to execute (from `Makefile', line 28):
+#  commands to execute (from `Makefile', line 37):
 	cd go/binding; \
 	go build \
 	--buildmode=c-archive \
@@ -256,7 +278,7 @@ bind: bind-macos bind-ios
 #  File has not been updated.
 
 # files hash-table stats:
-# Load=8/1024=1%, Rehash=0, Collisions=0/30=0%
+# Load=9/1024=1%, Rehash=0, Collisions=0/33=0%
 # VPATH Search Paths
 
 # No `vpath' search paths.
@@ -268,10 +290,6 @@ bind: bind-macos bind-ios
 # strcache size: total = 4096 / max = 4096 / min = 4096 / avg = 4096
 # strcache free: total = 4087 / max = 4087 / min = 4087 / avg = 4087
 
-# Finished Make data base on Sat Mar 27 11:33:06 2021
+# Finished Make data base on Sat Mar 27 13:44:16 2021
 
- 
-Makefile:15: warning: overriding commands for target `bind-ios'
-Makefile:6: warning: ignoring old commands for target `bind-ios'
-make: *** No rule to make target `all'.  Stop.
  
