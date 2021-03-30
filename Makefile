@@ -42,7 +42,7 @@ bind-macos:
 BINDINGS_RELEASES         ?= https://github.com/nimona/go-nimona/releases/download
 BINDINGS_VERSION          ?= v0.18.1
 BINDINGS_ARTIFACT_ANDROID ?= /${BINDINGS_VERSION}/libnimona-${BINDINGS_VERSION}-android.tar.gz
-BINDINGS_ARTIFACT_DARWIN  ?= /${BINDINGS_VERSION}/libnimona-${BINDINGS_VERSION}-darwin.tar.gz
+BINDINGS_ARTIFACT_MACOS   ?= /${BINDINGS_VERSION}/libnimona-${BINDINGS_VERSION}-macos.tar.gz
 BINDINGS_ARTIFACT_IOS     ?= /${BINDINGS_VERSION}/libnimona-${BINDINGS_VERSION}-ios.tar.gz
 BINDINGS_ARTIFACT_LINUX   ?= /${BINDINGS_VERSION}/libnimona-${BINDINGS_VERSION}-linux.tar.gz
 BINDINGS_ARTIFACT_WINDOWS ?= /${BINDINGS_VERSION}/libnimona-${BINDINGS_VERSION}-windows.tar.gz
@@ -52,7 +52,7 @@ upgrade-bindings:
 	mkdir -p android/src/main/jniLibs
 	wget -c ${BINDINGS_RELEASES}${BINDINGS_ARTIFACT_ANDROID} -O - | tar -xz -C android/src/main/jniLibs
 	mkdir -p macos
-	wget -c ${BINDINGS_RELEASES}${BINDINGS_ARTIFACT_DARWIN} -O - | tar -xz -C macos
+	wget -c ${BINDINGS_RELEASES}${BINDINGS_ARTIFACT_MACOS} -O - | tar -xz -C macos
 	mkdir -p ios
 	wget -c ${BINDINGS_RELEASES}${BINDINGS_ARTIFACT_IOS} -O - | tar -xz -C ios
 	mkdir -p linux/shared

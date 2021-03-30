@@ -97,19 +97,11 @@ class Binding {
   }
 
   Future<void> init(InitRequest req) async {
-    try {
-      String reqJSON = req.toJson();
-      Uint8List body = await callAsync(
-        'init',
-        stringToBytes(reqJSON),
-      );
-      if (body == null || body.isEmpty) {
-        throw 'got empty response';
-      }
-      return;
-    } on Exception catch (e) {
-      throw e;
-    }
+    String reqJSON = req.toJson();
+    await callAsync(
+      'init',
+      stringToBytes(reqJSON),
+    );
   }
 
   Future<List<String>> get(GetRequest req) async {
@@ -119,7 +111,7 @@ class Binding {
         'get',
         stringToBytes(reqJSON),
       );
-      if (body == null || body.isEmpty) {
+      if (body.isEmpty) {
         throw 'got empty response';
       }
       GetResponse resp = GetResponse.fromJson(
