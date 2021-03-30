@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:nimona/bridge/binding.dart';
-import 'package:nimona/models/connection_info.dart';
+import 'package:nimona/models/nimona_connection_info.dart';
 import 'package:nimona/models/get_request.dart';
 import 'package:nimona/models/init_request.dart';
 import 'package:nimona/models/subscribe_request.dart';
@@ -49,7 +49,7 @@ class Nimona {
     final typ = unmarshal(res);
     print(">>>>" + res);
     if (typ is ConnectionInfo) {
-      print("+++"+ typ.dataM!.publicKeyS!);
+      print("+++"+ typ.publicKey!);
       return typ;
     } else {
       throw 'getConnectionInfo() ERROR';

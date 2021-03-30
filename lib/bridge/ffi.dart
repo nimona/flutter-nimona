@@ -1,4 +1,5 @@
 import 'dart:ffi' as ffi;
+
 import 'package:ffi/ffi.dart';
 
 typedef call_func = ffi.Pointer<FFIBytesReturn> Function(

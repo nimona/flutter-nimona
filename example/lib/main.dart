@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 
 import 'package:nimona/nimona.dart';
 import 'package:nimona/models/init_request.dart';
+import 'package:nimona/models/nimona_connection_info.dart';
 
 void main() {
   if (!kIsWeb && (Platform.isLinux || Platform.isWindows)) {
@@ -40,9 +41,9 @@ class _MyAppState extends State<MyApp> {
         configPath: configPath,
       );
       Nimona.init(req).then((value) {
-        Nimona.getConnectionInfo().then((value) {
+        Nimona.getConnectionInfo().then((ConnectionInfo value) {
           setState(() {
-            _peerKey = value.dataM.publicKeyS;
+            _peerKey = value.publicKey;
           });
         });
       });

@@ -7,6 +7,7 @@ import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
+
 import 'package:nimona/bridge/ffi.dart';
 import 'package:nimona/bridge/isolate.dart';
 import 'package:nimona/models/get_request.dart';

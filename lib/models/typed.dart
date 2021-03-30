@@ -1,3 +1,3 @@
 abstract class NimonaTyped {
-  String type();
+  String getType();
 }
