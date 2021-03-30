@@ -40,7 +40,7 @@ bind-macos:
 		-o ${APP_PATH}/macos/libnimona.a
 
 BINDINGS_RELEASES         ?= https://github.com/nimona/go-nimona/releases/download
-BINDINGS_VERSION          ?= v0.18.0
+BINDINGS_VERSION          ?= v0.18.1
 BINDINGS_ARTIFACT_ANDROID ?= /${BINDINGS_VERSION}/libnimona-${BINDINGS_VERSION}-android.tar.gz
 BINDINGS_ARTIFACT_DARWIN  ?= /${BINDINGS_VERSION}/libnimona-${BINDINGS_VERSION}-darwin.tar.gz
 BINDINGS_ARTIFACT_IOS     ?= /${BINDINGS_VERSION}/libnimona-${BINDINGS_VERSION}-ios.tar.gz

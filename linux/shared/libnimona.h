@@ -20,9 +20,9 @@ typedef struct { const char *p; ptrdiff_t n; } _GoString_;
 
 
 #line 3 "main.go"
-#include <stdint.h>
-#include <stdlib.h>
-typedef struct { void* message; int size; char* error; } BytesReturn;
+ #include <stdint.h>
+ #include <stdlib.h>
+ typedef struct { void* message; int size; char* error; } BytesReturn;
 
 #line 1 "cgo-generated-wrapper"
 
